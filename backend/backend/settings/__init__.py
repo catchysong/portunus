@@ -53,26 +53,28 @@ Ero0b4LKYsce4XNdSblFJ5Coh+k5u2eb1KSwuBG20WNQ44mAmtP4AsxewnqRrtxi
 zjdZQs4goDrQInGIMscCQQCIT5jvRb197iRinBqpNy01i7GdlLtMC7Z9V/PV0YW1
 GmX50gvd7aA+i2UuZj7BxapFStyEGl4Nggglnn+QqQ+L"""
 
-DEFAULT_VERIFYING_KEY = """MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQC91RWCawEvxQj+tigRvuHxouO8
-jKd35ukUxFBFRAGcI57firbAkFII6zPIiWAENGMqtjX57hk9EjAZ27XvQ4SQACvD
-5j7htsJT31bZbVUH7a3JEDpxa02VXpXdfPYSs8umZkdxMxxmiD9uH9VmLN3VS14l
-xQlyJdlvbLmNCAf6uwIDAQAB"""
-
 SIGNING_KEY = f"""-----BEGIN RSA PRIVATE KEY-----
 {prod_required_env("DJANGO_JWT_SIGNING_KEY", DEFAULT_SIGNING_KEY)}
 -----END RSA PRIVATE KEY-----"""
+print("pre signing key")
+print(SIGNING_KEY)
+# Override the values set by willing-zg simple jwt plugin
+SIMPLE_JWT["USER_ID_FIELD"] = "portunus_uuid"
+SIMPLE_JWT["SIGNING_KEY"] = SIGNING_KEY
+SIMPLE_JWT["REFRESH_TOKEN_LIFETIME"] = timedelta(hours=1)
 
-VERIFYING_KEY = f"""-----BEGIN PUBLIC KEY-----
-{prod_required_env("DJANGO_JWT_VERIFYING_KEY", DEFAULT_VERIFYING_KEY)}
------END PUBLIC KEY-----"""
+if "DJANGO_JWT_SIGNING_KEY" in os.environ and PRODUCTION:
+    print("django jwt signing key in prod")
+    jwt_signing_key = json.loads(
+        get_secret(os.environ["DJANGO_JWT_SIGNING_KEY"])["SecretString"]
+    )
+    SIGNING_KEY = f"""-----BEGIN RSA PRIVATE KEY-----
+    {jwt_signing_key["DJANGO_JWT_SIGNING_KEY"].replace(" ", "")}
+    -----END RSA PRIVATE KEY-----"""
 
-SIMPLE_JWT = {
-    "USER_ID_FIELD": "portunus_uuid",
-    "ALGORITHM": "RS512",
-    "SIGNING_KEY": SIGNING_KEY,
-    "VERIFYING_KEY": VERIFYING_KEY,
-    "REFRESH_TOKEN_LIFETIME": timedelta(hours=1),
-}
+    SIMPLE_JWT["SIGNING_KEY"] = SIGNING_KEY
+    print("================")
+    print(SIGNING_KEY)
 
 CORS_ORIGIN_ALLOW_ALL = DEBUG
 CORS_ALLOW_CREDENTIALS = True

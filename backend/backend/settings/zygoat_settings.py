@@ -4,6 +4,8 @@ manually. Instead, update settings via this package's __init__.py.
 """
 
 import os
+import json
+import boto3
 import environ
 
 env = environ.Env()
@@ -17,6 +19,13 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PRODUCTION = env.bool("DJANGO_PRODUCTION", default=False)
 
 
+def get_secret(secret_arn):
+    """Create a Secrets Manager client"""
+    client = boto3.client("secretsmanager")
+    get_secret_value_response = client.get_secret_value(SecretId=secret_arn)
+    return get_secret_value_response
+
+
 def prod_required_env(key, default, method="str"):
     """Throw an exception if PRODUCTION is true and key is not provided"""
     if PRODUCTION:
@@ -28,6 +37,10 @@ def prod_required_env(key, default, method="str"):
 SECRET_KEY = prod_required_env(
     "DJANGO_SECRET_KEY", default="9a=5%_$0cykzvckso!3wo-1mu#&*t$4ur!xlybxx=l_8#zdex5"
 )
+if "DJANGO_SECRET_KEY" in os.environ and PRODUCTION:
+    django_secret_key = json.loads(get_secret(os.environ["DJANGO_SECRET_KEY"])["SecretString"])
+    SECRET_KEY = django_secret_key["DJANGO_SECRET_KEY"]
+
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False if PRODUCTION else env.bool("DJANGO_DEBUG", default=True)
@@ -83,6 +96,19 @@ WSGI_APPLICATION = "backend.wsgi.application"
 
 # Database
 # https://docs.djangoproject.com/en/3.0/ref/settings/#databases
+
+if "DATABASE_SECRET" in os.environ:
+    db_secret = json.loads(get_secret(os.environ["DATABASE_SECRET"])["SecretString"])
+
+    db_username = db_secret["username"]
+    db_password = db_secret["password"]
+    db_host = db_secret["host"]
+    db_port = str(db_secret["port"])
+    db_clusterid = db_secret["dbClusterIdentifier"]
+
+    db_url = f"postgres://{db_username}:{db_password}@{db_host}:{db_port}/{db_clusterid}"
+    os.environ["DATABASE_URL"] = db_url
+
 
 db_config = env.db_url("DATABASE_URL", default="postgres://postgres:postgres@db/postgres")
 DATABASES = {"default": db_config}
@@ -149,6 +175,9 @@ REST_FRAMEWORK = {
         "djangorestframework_camel_case.parser.CamelCaseMultiPartParser",
         "djangorestframework_camel_case.parser.CamelCaseJSONParser",
     ),
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "simplejwt_extensions.authentication.JWTAuthentication",
+    ),
 }
 
 # production must use SMTP. others will use DJANGO_EMAIL_BACKEND or default to "console"
@@ -159,8 +188,43 @@ EMAIL_HOST = "email-smtp.us-east-1.amazonaws.com"
 EMAIL_PORT = 587
 EMAIL_HOST_USER = prod_required_env("DJANGO_EMAIL_HOST_USER", "")
 EMAIL_HOST_PASSWORD = prod_required_env("DJANGO_EMAIL_HOST_PASSWORD", "")
+if "DJANGO_EMAIL_HOST_PASSWORD" in os.environ:
+    django_password = json.loads(
+        get_secret(os.environ["DJANGO_EMAIL_HOST_PASSWORD"])["SecretString"]
+    )
+    EMAIL_HOST_PASSWORD = django_password["DJANGO_EMAIL_HOST_PASSWORD"]
+
 EMAIL_USE_TLS = True
 
 SUPPORT_PHONE_NUMBER = "+1 (855) 943-4177"
 SUPPORT_EMAIL_ADDRESS = "clientservice@legalplans.com"
 PANEL_EMAIL_ADDRESS = "panel@legalplans.com"
+
+DEFAULT_VERIFYING_KEY = """MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQC91RWCawEvxQj+tigRvuHxouO8
+jKd35ukUxFBFRAGcI57firbAkFII6zPIiWAENGMqtjX57hk9EjAZ27XvQ4SQACvD
+5j7htsJT31bZbVUH7a3JEDpxa02VXpXdfPYSs8umZkdxMxxmiD9uH9VmLN3VS14l
+xQlyJdlvbLmNCAf6uwIDAQAB"""
+
+VERIFYING_KEY = f"""-----BEGIN PUBLIC KEY-----
+{prod_required_env("DJANGO_JWT_VERIFYING_KEY", DEFAULT_VERIFYING_KEY)}
+-----END PUBLIC KEY-----"""
+print("pre verifying key")
+print(VERIFYING_KEY)
+if "DJANGO_JWT_VERIFYING_KEY" in os.environ and PRODUCTION:
+    print("jwt verifying key in prod")
+    jwt_verifying_key = json.loads(
+        get_secret(os.environ["DJANGO_JWT_VERIFYING_KEY"])["SecretString"]
+    )
+    VERIFYING_KEY = f"""-----BEGIN PUBLIC KEY-----
+    {jwt_verifying_key["DJANGO_JWT_VERIFYING_KEY"].replace(" ", "")}
+    -----END PUBLIC KEY-----"""
+    print("verifying key=======")
+    print(VERIFYING_KEY)
+
+
+SIMPLE_JWT = {
+    "USER_ID_FIELD": "public_id",
+    "ALGORITHM": "RS512",
+    "SIGNING_KEY": None,
+    "VERIFYING_KEY": VERIFYING_KEY,
+}

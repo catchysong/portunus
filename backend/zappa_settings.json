@@ -21,6 +21,10 @@
     "extends": "base",
     "domain": "api-qa.login.legalplans.com"
   },
+  "primeon": {
+    "extends": "base",
+    "domain": "api-primeon.login.legalplans.com"
+  },
   "staging": {
     "extends": "base",
     "domain": "api-staging.login.legalplans.com"

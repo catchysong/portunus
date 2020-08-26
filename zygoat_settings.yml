@@ -8,5 +8,9 @@ extras:
   - willing_zg:google_analytics
   - willing_zg:django_willing_zg
   - willing_zg:get_env_util
+  - willing_zg:secrets_manager_util
+  - willing_zg:secrets_util
+  - willing_zg:simple_jwt
+
 exclude:
   - Frontend__Proxy
