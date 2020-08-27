@@ -35,7 +35,7 @@ def prod_required_env(key, default, method="str"):
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = prod_required_env(
-    "DJANGO_SECRET_KEY", default="9a=5%_$0cykzvckso!3wo-1mu#&*t$4ur!xlybxx=l_8#zdex5"
+    "DJANGO_SECRET_KEY", default="zFmpUzuy6QpwMMqiggBa0pvi99z2UFm+JrtZsEHxWjs="
 )
 if "DJANGO_SECRET_KEY" in os.environ and PRODUCTION:
     django_secret_key = json.loads(get_secret(os.environ["DJANGO_SECRET_KEY"])["SecretString"])
@@ -205,22 +205,17 @@ jKd35ukUxFBFRAGcI57firbAkFII6zPIiWAENGMqtjX57hk9EjAZ27XvQ4SQACvD
 5j7htsJT31bZbVUH7a3JEDpxa02VXpXdfPYSs8umZkdxMxxmiD9uH9VmLN3VS14l
 xQlyJdlvbLmNCAf6uwIDAQAB"""
 
-VERIFYING_KEY = f"""-----BEGIN PUBLIC KEY-----
-{prod_required_env("DJANGO_JWT_VERIFYING_KEY", DEFAULT_VERIFYING_KEY)}
------END PUBLIC KEY-----"""
-print("pre verifying key")
-print(VERIFYING_KEY)
+NAKED_VERIFYING_KEY = prod_required_env("DJANGO_JWT_VERIFYING_KEY", DEFAULT_VERIFYING_KEY)
+
 if "DJANGO_JWT_VERIFYING_KEY" in os.environ and PRODUCTION:
-    print("jwt verifying key in prod")
-    jwt_verifying_key = json.loads(
+    NAKED_VERIFYING_KEY = json.loads(
         get_secret(os.environ["DJANGO_JWT_VERIFYING_KEY"])["SecretString"]
     )
-    VERIFYING_KEY = f"""-----BEGIN PUBLIC KEY-----
-    {jwt_verifying_key["DJANGO_JWT_VERIFYING_KEY"].replace(" ", "")}
-    -----END PUBLIC KEY-----"""
-    print("verifying key=======")
-    print(VERIFYING_KEY)
 
+
+VERIFYING_KEY = f"""-----BEGIN PUBLIC KEY-----
+{NAKED_VERIFYING_KEY["DJANGO_JWT_VERIFYING_KEY"].replace(" ", "")}
+-----END PUBLIC KEY-----"""
 
 SIMPLE_JWT = {
     "USER_ID_FIELD": "public_id",
