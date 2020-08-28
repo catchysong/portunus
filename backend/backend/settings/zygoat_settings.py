@@ -35,7 +35,7 @@ def prod_required_env(key, default, method="str"):
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = prod_required_env(
-    "DJANGO_SECRET_KEY", default="zFmpUzuy6QpwMMqiggBa0pvi99z2UFm+JrtZsEHxWjs="
+    "DJANGO_SECRET_KEY", default="1EJjhdOOqcnEU4ybJFEMo1jBpWmuv44YObROluFTEWc="
 )
 if "DJANGO_SECRET_KEY" in os.environ and PRODUCTION:
     django_secret_key = json.loads(get_secret(os.environ["DJANGO_SECRET_KEY"])["SecretString"])
@@ -210,11 +210,11 @@ NAKED_VERIFYING_KEY = prod_required_env("DJANGO_JWT_VERIFYING_KEY", DEFAULT_VERI
 if "DJANGO_JWT_VERIFYING_KEY" in os.environ and PRODUCTION:
     NAKED_VERIFYING_KEY = json.loads(
         get_secret(os.environ["DJANGO_JWT_VERIFYING_KEY"])["SecretString"]
-    )
+    )["DJANGO_JWT_VERIFYING_KEY"]
 
 
 VERIFYING_KEY = f"""-----BEGIN PUBLIC KEY-----
-{NAKED_VERIFYING_KEY["DJANGO_JWT_VERIFYING_KEY"].replace(" ", "")}
+{NAKED_VERIFYING_KEY.replace(" ", "")}
 -----END PUBLIC KEY-----"""
 
 SIMPLE_JWT = {

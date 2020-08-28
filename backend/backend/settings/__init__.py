@@ -58,9 +58,9 @@ NAKED_SIGNING_KEY = prod_required_env("DJANGO_JWT_SIGNING_KEY", DEFAULT_SIGNING_
 if "DJANGO_JWT_SIGNING_KEY" in os.environ and PRODUCTION:
     NAKED_SIGNING_KEY = json.loads(
         get_secret(os.environ["DJANGO_JWT_SIGNING_KEY"])["SecretString"]
-    )
+    )["DJANGO_JWT_SIGNING_KEY"]
 SIGNING_KEY = f"""-----BEGIN RSA PRIVATE KEY-----
-{NAKED_SIGNING_KEY["DJANGO_JWT_SIGNING_KEY"].replace(" ", "")}
+{NAKED_SIGNING_KEY.replace(" ", "")}
 -----END RSA PRIVATE KEY-----"""
 
 # Override the values set by willing-zg simple jwt plugin
@@ -81,10 +81,16 @@ BASE_URL = env("DJANGO_BASE_URL", default="http://localhost:3001/")
 AUTH_PASSWORD_VALIDATORS = [
     {
         "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
-        "OPTIONS": {"min_length": 7,},
+        "OPTIONS": {
+            "min_length": 7,
+        },
     },
-    {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",},
-    {"NAME": "authentication.password_validators.AlphaNumericPasswordValidator",},
+    {
+        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
+    },
+    {
+        "NAME": "authentication.password_validators.AlphaNumericPasswordValidator",
+    },
 ]
 
 DEFAULT_REDIRECT_URL = prod_required_env(
