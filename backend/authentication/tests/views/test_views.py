@@ -167,7 +167,10 @@ class TestCreateUserView(APITestCase):
         new_email = "newuser@test.com"
         request = factory.post(
             reverse("authentication:create_user"),
-            {"email": new_email, "password": VALID_PASSWORD,},
+            {
+                "email": new_email,
+                "password": VALID_PASSWORD,
+            },
             format="json",
         )
         force_authenticate(request, user=staff_user)

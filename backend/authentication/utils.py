@@ -109,7 +109,11 @@ def check_and_change_password(request, user, new_password):
         validate_password(new_password)
     except ValidationError as e:
         return make_response(
-            False, {"error": INVALID_PASSWORD, "validation_error": e.messages[0],},
+            False,
+            {
+                "error": INVALID_PASSWORD,
+                "validation_error": e.messages[0],
+            },
         )
 
     blacklist_user_tokens(user)

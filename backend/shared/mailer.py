@@ -56,5 +56,8 @@ class Mailer:
             [user.email],
             f"Account Notice: {subject}",
             "mlp_transactional_email",
-            {"user": user, "notice": text,},
+            {
+                "user": user,
+                "notice": text,
+            },
         )

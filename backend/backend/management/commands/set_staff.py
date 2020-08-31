@@ -21,7 +21,9 @@ class Command(BaseCommand):
             help="the user keys should be interpreted as integers",
         )
         parser.add_argument(
-            "--unset", action="store_true", help="set is_staff to False instead of True",
+            "--unset",
+            action="store_true",
+            help="set is_staff to False instead of True",
         )
 
     def handle(self, *args, **options):

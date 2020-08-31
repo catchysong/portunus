@@ -17,7 +17,8 @@ class PortunusMailer(Mailer):
         # Make a one-time token linked to this user.
         token = ResetToken.for_user(user)
         return parse.urljoin(
-            BASE_URL, f"/reset-password/complete/{user.portunus_uuid}/{token}/",
+            BASE_URL,
+            f"/reset-password/complete/{user.portunus_uuid}/{token}/",
         )
 
     @classmethod
@@ -42,7 +43,8 @@ class PortunusMailer(Mailer):
     def send_account_creation_notice(cls, user):
         token = ResetToken.for_user(user)
         new_account_url = parse.urljoin(
-            BASE_URL, f"/set-password/{user.portunus_uuid}/{token}",
+            BASE_URL,
+            f"/set-password/{user.portunus_uuid}/{token}",
         )
         cls.send_email(
             [user.email],
@@ -55,7 +57,8 @@ class PortunusMailer(Mailer):
     def send_change_email_confirmation(cls, user, new_email):
         token = ChangeEmailToken.for_user(user)
         confirm_new_email_url = parse.urljoin(
-            BASE_URL, f"/change-email/complete/{token}/{new_email}/",
+            BASE_URL,
+            f"/change-email/complete/{token}/{new_email}/",
         )
         cls.send_email(
             [new_email],
